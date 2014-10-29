@@ -30,15 +30,10 @@ enable tramp integration in that terminal."
   "Perform the ssh login dance.  Supports password or cert logins
 to HOSTNMAE."
   (let* ((user "")
-         (hostname (car (last host)))
-         (buffer-uniquifier 1)
-         (buffer-name hostname))
-    (while (get-buffer (format "*%s*" buffer-name))
-      (setq buffer-uniquifier (1+ buffer-uniquifier))
-      (setq buffer-name (format "%s<%d>" hostname buffer-uniquifier)))
+         (hostname (car (last host))))
     (when (= (length host) 2)
       (setq user (format "%s@" (car host))))
-    (tt--create-term buffer-name "ssh" (format "%s%s" user hostname)))
+    (tt--create-term hostname "ssh" (format "%s%s" user hostname)))
   (save-excursion
     (while (not (re-search-backward tramp-shell-prompt-pattern nil t))
       (let ((prompt-pos (re-search-backward tramp-password-prompt-regexp prompt-bound t)))
@@ -83,13 +78,14 @@ as a list of strings"
 (defun tt--create-term (new-buffer-name cmd &rest switches)
   "Create an ansi-term running an arbitrary command, including
 extra parameters."
-  (setq term-ansi-buffer-name new-buffer-name)
-  (setq term-ansi-buffer-name (generate-new-buffer-name term-ansi-buffer-name))
-  (setq term-ansi-buffer-name (apply 'make-term term-ansi-buffer-name cmd nil switches))
-  (set-buffer term-ansi-buffer-name)
-  (term-mode)
-  (term-char-mode)
-  (term-set-escape-char ?\C-x)
-  (switch-to-buffer term-ansi-buffer-name))
+  (let* ((new-buffer-name (format "*%s*" new-buffer-name))
+         (new-buffer-name (generate-new-buffer-name new-buffer-name))
+         (new-buffer-name (replace-regexp-in-string "\*" "" new-buffer-name))
+         (new-buffer-name (apply 'make-term new-buffer-name cmd nil switches)))
+    (set-buffer new-buffer-name)
+    (term-mode)
+    (term-char-mode)
+    (term-set-escape-char ?\C-x)
+    (switch-to-buffer new-buffer-name)))
 
 (provide 'tramp-term)
