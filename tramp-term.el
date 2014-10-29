@@ -1,4 +1,4 @@
-;; Various bits of code here were lifted from 
+;; Various bits of code here were lifted from
 ;; http://www.emacswiki.org/emacs-se/AnsiTermHints
 ;;
 ;; The intent of this is to wrap the tramp directory tracking
