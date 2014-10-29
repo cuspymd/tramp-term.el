@@ -40,8 +40,8 @@ to HOSTNMAE."
       (setq user (format "%s@" (car host))))
     (tt--create-term buffer-name "ssh" (format "%s%s" user hostname)))
   (save-excursion
-    (while (not (search-backward "Last login:" nil t))
-      (let ((prompt-pos (tt--find-password-prompt prompt-bound)))
+    (while (not (re-search-backward tramp-shell-prompt-pattern nil t))
+      (let ((prompt-pos (re-search-backward tramp-password-prompt-regexp prompt-bound t)))
         (if (not prompt-pos)
             (sleep-for 0.1)
           (setq prompt-bound (1+ prompt-pos))
@@ -79,11 +79,6 @@ as a list of strings"
     (delete-region (1- (point)) (point-max))
     (replace-regexp "[[:blank:]]+" "\" \"" nil (point-min) (point-max))
     (read (concat "(\"" (buffer-string) "\")"))))
-
-(defun tt--find-password-prompt (bound)
-  "Search backward for a password or passphrase and return it's
-starting position or nil.  Do not search backward past BOUND"
-  (search-backward-regexp "\\(password\\|passphrase.*\\|PASSCODE.*\\):" bound t))
 
 (defun tt--create-term (new-buffer-name cmd &rest switches)
   "Create an ansi-term running an arbitrary command, including
