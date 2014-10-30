@@ -60,6 +60,8 @@ enable tramp integration in that terminal."
       (run-hook-with-args 'tt-after-initialized-hook hostname)
       (message "tramp-term initialized"))))
 
+;; I imagine TRAMP has utility functions that would replace most of
+;; this.  Needs investigation.
 (defun tt--do-ssh-login (host)
   "Perform the ssh login dance."
   (let* ((user "")
@@ -97,6 +99,9 @@ clear
           (completing-read-multiple prompt (tt--parse-hosts ssh-config)))
       (list (completing-read prompt nil)))))
 
+;; This already exists somewhere in TRAMP for sure, I just had the
+;; time to un-invent this wheel yet.  See the completion resulting
+;; from "C-x C-f /ssh:<Tab>".
 (defun tt--parse-hosts (ssh-config)
   "Parse any host directives from SSH-CONFIG file and return them
 as a list of strings"
