@@ -39,6 +39,7 @@
 ;;; Code:
 
 (require 'term)
+(require 'tramp)
 
 (defvar tt-after-initialized-hook nil
   "Hook called after tramp has been initialized on the remote
@@ -92,30 +93,14 @@ clear
 
 (defun tt--select-host ()
   "Return a host from a list of hosts."
-  (let ((ssh-config "~/.ssh/config")
-        (prompt "[user@]host: "))
-    (if (file-exists-p ssh-config)
-        (let ((crm-separator "@"))
-          (completing-read-multiple prompt (tt--parse-hosts ssh-config)))
-      (list (completing-read prompt nil)))))
+  (let ((crm-separator "@"))
+    (completing-read-multiple "[user@]host: " (tt--parse-hosts "~/.ssh/config"))))
 
-;; This already exists somewhere in TRAMP for sure, I just had the
-;; time to un-invent this wheel yet.  See the completion resulting
-;; from "C-x C-f /ssh:<Tab>".
 (defun tt--parse-hosts (ssh-config)
   "Parse any host directives from SSH-CONFIG file and return them
 as a list of strings"
-  (with-temp-buffer
-    (insert-file-contents ssh-config)
-    (let ((beg (point)))
-      (while (search-forward-regexp "^host[[:blank:]]+" nil t)
-        (delete-region beg (point))
-        (end-of-line)
-        (insert " ")
-        (setq beg (point))))
-    (delete-region (1- (point)) (point-max))
-    (replace-regexp "[[:blank:]]+" "\" \"" nil (point-min) (point-max))
-    (read (concat "(\"" (buffer-string) "\")"))))
+  (mapcar 'cadr (delete nil (tramp-parse-sconfig ssh-config))))
+
 
 (defun tt--create-term (new-buffer-name cmd &rest switches)
   "Create an ansi-term running an arbitrary command, including
