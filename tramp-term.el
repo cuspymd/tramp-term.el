@@ -40,9 +40,9 @@
 
 (require 'term)
 
-(defvar tt-after-tramp-initialized-hook nil
+(defvar tt-after-initialized-hook nil
   "Hook called after tramp has been initialized on the remote
-  host.  Each hook is passed a single arg which contains the
+  host.  Hooks should expect a single arg which contains the
   hostname used to connect to the remote machine.")
 
 ;;;###autoload
@@ -57,7 +57,7 @@ enable tramp integration in that terminal."
         (message "Invalid host string")
       (tt--do-ssh-login host)
       (tt--initialize-tramp hostname)
-      (run-hook-with-args 'tt-after-tramp-initialized-hook hostname)
+      (run-hook-with-args 'tt-after-initialized-hook hostname)
       (message "tramp-term initialized"))))
 
 (defun tt--do-ssh-login (host)
