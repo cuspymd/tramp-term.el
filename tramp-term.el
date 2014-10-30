@@ -74,13 +74,15 @@ enable tramp integration in that terminal."
     (let ((bound 0))
       (while (not (tt-find-shell-prompt bound))
         (let ((yesno-prompt-pos (tt-find-yesno-prompt bound))
-              (passwd-prompt-pos (tt-find-passwd-prompt bound)))
+              (passwd-prompt-pos (tt-find-passwd-prompt bound))
+              (service-unknown-pos (tt-find-service-unknown bound)))
           (cond (yesno-prompt-pos
                  (tt--confirm)
                  (setq bound (1+ yesno-prompt-pos)))
                 (passwd-prompt-pos
                  (tt--handle-passwd-prompt)
                  (setq bound (1+ passwd-prompt-pos)))
+                (service-unknown-pos (throw 'tt--abort 'tt--abort))
                 (t (sleep-for 0.1))))))))
 
 (defun tt-find-shell-prompt (bound)
@@ -91,6 +93,9 @@ enable tramp integration in that terminal."
 
 (defun tt-find-passwd-prompt (bound)
   (re-search-backward tramp-password-prompt-regexp bound t))
+
+(defun tt-find-service-unknown (bound)
+  (re-search-backward "Name or service not known" bound t))
 
 (defun tt--handle-passwd-prompt ()
   "Reads a password from the user and sends it to the server."
