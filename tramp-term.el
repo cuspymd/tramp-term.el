@@ -101,7 +101,6 @@ clear
 as a list of strings"
   (mapcar 'cadr (delete nil (tramp-parse-sconfig ssh-config))))
 
-
 (defun tt--create-term (new-buffer-name cmd &rest switches)
   "Create an ansi-term running an arbitrary command, including
 extra parameters."
