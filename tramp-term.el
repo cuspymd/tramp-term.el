@@ -73,16 +73,16 @@ enable tramp integration in that terminal."
   (save-excursion
     (let ((bound 0))
       (while (not (tt-find-shell-prompt bound))
-        (let ((yesno-prompt-pos (tt-find-yesno-prompt bound))
-              (passwd-prompt-pos (tt-find-passwd-prompt bound))
-              (service-unknown-pos (tt-find-service-unknown bound)))
-          (cond (yesno-prompt-pos
+        (let ((yesno-prompt (tt-find-yesno-prompt bound))
+              (passwd-prompt (tt-find-passwd-prompt bound))
+              (service-unknown (tt-find-service-unknown bound)))
+          (cond (yesno-prompt
                  (tt--confirm)
-                 (setq bound (1+ yesno-prompt-pos)))
-                (passwd-prompt-pos
+                 (setq bound (1+ yesno-prompt)))
+                (passwd-prompt
                  (tt--handle-passwd-prompt)
-                 (setq bound (1+ passwd-prompt-pos)))
-                (service-unknown-pos (throw 'tt--abort 'tt--abort))
+                 (setq bound (1+ passwd-prompt)))
+                (service-unknown (throw 'tt--abort 'tt--abort))
                 (t (sleep-for 0.1))))))))
 
 (defun tt-find-shell-prompt (bound)
