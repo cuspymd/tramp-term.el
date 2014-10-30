@@ -1,8 +1,42 @@
-;; Various bits of code here were lifted from
-;; http://www.emacswiki.org/emacs-se/AnsiTermHints
+;;; tramp-term.el --- Automatic setup of directory tracking in ssh sessions.
+
+;; Copyright (C) 2014 Randy Morris
+
+;; Author: Randy Morris <randy.morris@archlinux.us>
+;; Version: 0.1
+;; Keywords: tramp, ssh
+;; URL: https://github.com/randymorris/tramp-term.el
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2, or (at
+;; your option) any later version.
+
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+;; Boston, MA 02111-1307, USA.
+
+;;; Commentary:
+
+;; This package provides a way to initiate ssh sessions within emacs
+;; and have directory tracking automatically set up for editing files
+;; with TRAMP.  No configuration is required on the remote host.
 ;;
-;; The intent of this is to wrap the tramp directory tracking
-;; in a convenient and reusable way.
+;; Currently this is designed to work with a bash shell on the remote
+;; host, however with a little work this could be changed to allow
+;; different shells via a per-host configuration.
+;;
+;; The ideas presented here and various bits of code within were
+;; lifted directly from http://www.emacswiki.org/emacs-se/AnsiTermHints.
+;; Consider the editors of that page as contributors to this package.
+
+;;; Code:
 
 (require 'term)
 
@@ -89,3 +123,4 @@ extra parameters."
     (switch-to-buffer new-buffer-name)))
 
 (provide 'tramp-term)
+;;; tramp-term.el ends here
