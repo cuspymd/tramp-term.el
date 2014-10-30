@@ -56,7 +56,7 @@ enable tramp integration in that terminal."
     (if (> (length host) 2)
         (message "Invalid host string")
       (tt--do-ssh-login host)
-      (tt--initialize-tramp hostname)
+      (tt--initialize hostname)
       (run-hook-with-args 'tt-after-initialized-hook hostname)
       (message "tramp-term initialized"))))
 
@@ -75,7 +75,7 @@ enable tramp integration in that terminal."
           (setq prompt-bound (1+ prompt-pos))
           (term-send-raw-string (concat (read-passwd "Password: ") (kbd "RET"))))))))
 
-(defun tt--initialize-tramp (hostname)
+(defun tt--initialize (hostname)
   "Send bash commands to set up tramp integration."
   (term-send-raw-string (format "
 function set-eterm-dir {
