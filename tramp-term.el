@@ -90,14 +90,18 @@ clear
 
 (defun tt--select-host ()
   "Return a host from a list of hosts."
-  (let ((crm-separator "@"))
-    (completing-read-multiple "[user@]host: " (tt--parse-hosts-from-ssh-config))))
+  (let ((ssh-config "~/.ssh/config")
+        (prompt "[user@]host: "))
+    (if (file-exists-p ssh-config)
+        (let ((crm-separator "@"))
+          (completing-read-multiple prompt (tt--parse-hosts ssh-config)))
+      (list (completing-read prompt nil)))))
 
-(defun tt--parse-hosts-from-ssh-config ()
-  "Parse any host directives from ~/.ssh/config and return them
+(defun tt--parse-hosts (ssh-config)
+  "Parse any host directives from SSH-CONFIG file and return them
 as a list of strings"
   (with-temp-buffer
-    (insert-file-contents "~/.ssh/config")
+    (insert-file-contents ssh-config)
     (let ((beg (point)))
       (while (search-forward-regexp "^host[[:blank:]]+" nil t)
         (delete-region beg (point))
