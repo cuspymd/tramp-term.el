@@ -47,7 +47,7 @@
 
 ;;;###autoload
 (defun tramp-term ()
-  "Create an ansi-term running ssh sesstion and automatically
+  "Create an ansi-term running ssh session and automatically
 enable tramp integration in that terminal."
   (interactive)
   (let* ((host (tt--select-host))
@@ -61,8 +61,7 @@ enable tramp integration in that terminal."
       (message "tramp-term initialized"))))
 
 (defun tt--do-ssh-login (host)
-  "Perform the ssh login dance.  Supports password or cert logins
-to HOSTNMAE."
+  "Perform the ssh login dance."
   (let* ((user "")
          (hostname (car (last host))))
     (when (= (length host) 2)
