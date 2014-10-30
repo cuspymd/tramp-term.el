@@ -56,10 +56,10 @@ enable tramp integration in that terminal."
          (prompt-bound nil))
     (if (> (length host) 2)
         (message "Invalid host string")
-      (tt--do-ssh-login host)
-      (tt--initialize hostname)
-      (run-hook-with-args 'tt-after-initialized-hook hostname)
-      (message "tramp-term initialized"))))
+      (unless (eql (catch 'tt--abort (tt--do-ssh-login host)) 'tt--abort)
+        (tt--initialize hostname)
+        (run-hook-with-args 'tt-after-initialized-hook hostname)
+        (message "tramp-term initialized")))))
 
 ;; I imagine TRAMP has utility functions that would replace most of
 ;; this.  Needs investigation.
@@ -71,12 +71,38 @@ enable tramp integration in that terminal."
       (setq user (format "%s@" (car host))))
     (tt--create-term hostname "ssh" (format "%s%s" user hostname)))
   (save-excursion
-    (while (not (re-search-backward tramp-shell-prompt-pattern nil t))
-      (let ((prompt-pos (re-search-backward tramp-password-prompt-regexp prompt-bound t)))
-        (if (not prompt-pos)
-            (sleep-for 0.1)
-          (setq prompt-bound (1+ prompt-pos))
-          (term-send-raw-string (concat (read-passwd "Password: ") (kbd "RET"))))))))
+    (let ((bound 0))
+      (while (not (tt-find-shell-prompt bound))
+        (let ((yesno-prompt-pos (tt-find-yesno-prompt bound))
+              (passwd-prompt-pos (tt-find-passwd-prompt bound)))
+          (cond (yesno-prompt-pos
+                 (tt--confirm)
+                 (setq bound (1+ yesno-prompt-pos)))
+                (passwd-prompt-pos
+                 (tt--handle-passwd-prompt)
+                 (setq bound (1+ passwd-prompt-pos)))
+                (t (sleep-for 0.1))))))))
+
+(defun tt-find-shell-prompt (bound)
+  (re-search-backward tramp-shell-prompt-pattern bound t))
+
+(defun tt-find-yesno-prompt (bound)
+  (re-search-backward tramp-yesno-prompt-regexp bound t))
+
+(defun tt-find-passwd-prompt (bound)
+  (re-search-backward tramp-password-prompt-regexp bound t))
+
+(defun tt--handle-passwd-prompt ()
+  "Reads a password from the user and sends it to the server."
+  (term-send-raw-string
+   (concat (read-passwd "Password: ") (kbd "RET"))))
+
+(defun tt--confirm ()
+  "Prompts the user to continue, aborts if they decline."
+  (if (yes-or-no-p "Continue? ")
+      (term-send-raw-string (concat "yes" (kbd "RET")))
+    (term-send-raw-string (concat "no" (kbd "RET")))
+    (throw 'tt--abort 'tt--abort)))
 
 (defun tt--initialize (hostname)
   "Send bash commands to set up tramp integration."
