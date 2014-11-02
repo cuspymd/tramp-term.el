@@ -73,10 +73,10 @@ enable tramp integration in that terminal."
     (tt--create-term hostname "ssh" (format "%s%s" user hostname)))
   (save-excursion
     (let ((bound 0))
-      (while (not (tt-find-shell-prompt bound))
-        (let ((yesno-prompt (tt-find-yesno-prompt bound))
-              (passwd-prompt (tt-find-passwd-prompt bound))
-              (service-unknown (tt-find-service-unknown bound)))
+      (while (not (tt-find--shell-prompt bound))
+        (let ((yesno-prompt (tt-find--yesno-prompt bound))
+              (passwd-prompt (tt-find--passwd-prompt bound))
+              (service-unknown (tt-find--service-unknown bound)))
           (cond (yesno-prompt
                  (tt--confirm)
                  (setq bound (1+ yesno-prompt)))
@@ -86,16 +86,16 @@ enable tramp integration in that terminal."
                 (service-unknown (throw 'tt--abort 'tt--abort))
                 (t (sleep-for 0.1))))))))
 
-(defun tt-find-shell-prompt (bound)
+(defun tt-find--shell-prompt (bound)
   (re-search-backward tramp-shell-prompt-pattern bound t))
 
-(defun tt-find-yesno-prompt (bound)
+(defun tt-find--yesno-prompt (bound)
   (re-search-backward tramp-yesno-prompt-regexp bound t))
 
-(defun tt-find-passwd-prompt (bound)
+(defun tt-find--passwd-prompt (bound)
   (re-search-backward tramp-password-prompt-regexp bound t))
 
-(defun tt-find-service-unknown (bound)
+(defun tt-find--service-unknown (bound)
   (re-search-backward "Name or service not known" bound t))
 
 (defun tt--handle-passwd-prompt ()
