@@ -7,12 +7,9 @@ from the ssh session as easy as <kbd>C-x</kbd> <kbd>C-f</kbd>.
 ## Installation
 
 It is strongly recommended to install tramp-term with `package.el` (included in
-emacs 24+).  Until a package is available on [MELPA][1] or [marmalade][2] you
-can clone this repo and use `package-install-file` to install tramp-term
-directly.
+emacs 24+).  A package is currently available on available on [MELPA][1].
 
 [1]: http://melpa.org/
-[2]: http://marmalade-repo.org/
 
 ## Basic usage
 
