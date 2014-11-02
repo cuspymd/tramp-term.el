@@ -41,7 +41,7 @@
 (require 'term)
 (require 'tramp)
 
-(defvar tt-after-initialized-hook nil
+(defvar tramp-term-after-initialized-hook nil
   "Hook called after tramp has been initialized on the remote
   host.  Hooks should expect a single arg which contains the
   hostname used to connect to the remote machine.")
@@ -51,66 +51,66 @@
   "Create an ansi-term running ssh session and automatically
 enable tramp integration in that terminal."
   (interactive)
-  (let* ((host (tt--select-host))
+  (let* ((host (tramp-term--select-host))
          (hostname (car (last host)))
          (prompt-bound nil))
     (if (or (> (length host) 2)
             (eql (length hostname) 0))
         (message "Invalid host string")
-      (unless (eql (catch 'tt--abort (tt--do-ssh-login host)) 'tt--abort)
-        (tt--initialize hostname)
-        (run-hook-with-args 'tt-after-initialized-hook hostname)
+      (unless (eql (catch 'tramp-term--abort (tramp-term--do-ssh-login host)) 'tramp-term--abort)
+        (tramp-term--initialize hostname)
+        (run-hook-with-args 'tramp-term-after-initialized-hook hostname)
         (message "tramp-term initialized")))))
 
 ;; I imagine TRAMP has utility functions that would replace most of
 ;; this.  Needs investigation.
-(defun tt--do-ssh-login (host)
+(defun tramp-term--do-ssh-login (host)
   "Perform the ssh login dance."
   (let* ((user "")
          (hostname (car (last host))))
     (when (= (length host) 2)
       (setq user (format "%s@" (car host))))
-    (tt--create-term hostname "ssh" (format "%s%s" user hostname)))
+    (tramp-term--create-term hostname "ssh" (format "%s%s" user hostname)))
   (save-excursion
     (let ((bound 0))
-      (while (not (tt-find--shell-prompt bound))
-        (let ((yesno-prompt (tt-find--yesno-prompt bound))
-              (passwd-prompt (tt-find--passwd-prompt bound))
-              (service-unknown (tt-find--service-unknown bound)))
+      (while (not (tramp-term--find-shell-prompt bound))
+        (let ((yesno-prompt (tramp-term--find-yesno-prompt bound))
+              (passwd-prompt (tramp-term--find-passwd-prompt bound))
+              (service-unknown (tramp-term--find-service-unknown bound)))
           (cond (yesno-prompt
-                 (tt--confirm)
+                 (tramp-term--confirm)
                  (setq bound (1+ yesno-prompt)))
                 (passwd-prompt
-                 (tt--handle-passwd-prompt)
+                 (tramp-term--handle-passwd-prompt)
                  (setq bound (1+ passwd-prompt)))
-                (service-unknown (throw 'tt--abort 'tt--abort))
+                (service-unknown (throw 'tramp-term--abort 'tramp-term--abort))
                 (t (sleep-for 0.1))))))))
 
-(defun tt-find--shell-prompt (bound)
+(defun tramp-term--find-shell-prompt (bound)
   (re-search-backward tramp-shell-prompt-pattern bound t))
 
-(defun tt-find--yesno-prompt (bound)
+(defun tramp-term--find-yesno-prompt (bound)
   (re-search-backward tramp-yesno-prompt-regexp bound t))
 
-(defun tt-find--passwd-prompt (bound)
+(defun tramp-term--find-passwd-prompt (bound)
   (re-search-backward tramp-password-prompt-regexp bound t))
 
-(defun tt-find--service-unknown (bound)
+(defun tramp-term--find-service-unknown (bound)
   (re-search-backward "Name or service not known" bound t))
 
-(defun tt--handle-passwd-prompt ()
+(defun tramp-term--handle-passwd-prompt ()
   "Reads a password from the user and sends it to the server."
   (term-send-raw-string
    (concat (read-passwd "Password: ") (kbd "RET"))))
 
-(defun tt--confirm ()
+(defun tramp-term--confirm ()
   "Prompts the user to continue, aborts if they decline."
   (if (yes-or-no-p "Continue? ")
       (term-send-raw-string (concat "yes" (kbd "RET")))
     (term-send-raw-string (concat "no" (kbd "RET")))
-    (throw 'tt--abort 'tt--abort)))
+    (throw 'tramp-term--abort 'tramp-term--abort)))
 
-(defun tt--initialize (hostname)
+(defun tramp-term--initialize (hostname)
   "Send bash commands to set up tramp integration."
   (term-send-raw-string (format "
 function set-eterm-dir {
@@ -123,17 +123,17 @@ PROMPT_COMMAND=set-eterm-dir
 clear
 " hostname)))
 
-(defun tt--select-host ()
+(defun tramp-term--select-host ()
   "Return a host from a list of hosts."
   (let ((crm-separator "@"))
-    (completing-read-multiple "[user@]host: " (tt--parse-hosts "~/.ssh/config"))))
+    (completing-read-multiple "[user@]host: " (tramp-term--parse-hosts "~/.ssh/config"))))
 
-(defun tt--parse-hosts (ssh-config)
+(defun tramp-term--parse-hosts (ssh-config)
   "Parse any host directives from SSH-CONFIG file and return them
 as a list of strings"
   (mapcar 'cadr (delete nil (tramp-parse-sconfig ssh-config))))
 
-(defun tt--create-term (new-buffer-name cmd &rest switches)
+(defun tramp-term--create-term (new-buffer-name cmd &rest switches)
   "Create an ansi-term running an arbitrary command, including
 extra parameters."
   (let* ((new-buffer-name (format "*%s*" new-buffer-name))

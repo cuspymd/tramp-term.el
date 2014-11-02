@@ -38,23 +38,25 @@ including the TRAMP syntax to open the remote files.
 
 ### Configuration
 
-* `tt-after-initialized-hook` - Hook called after tramp-term has been
+* `tramp-term-after-initialized-hook` - Hook called after tramp-term has been
   initialized on the remote host.  Hooks should expect a single
   argument which contains the hostname used to connect to the remote
   machine.
 
 ### Limitations
 
-Currently tramp-term only supports bash shells on the remote host.  This would
-be pretty easy to extend but could be tricky to make configurable since both
-users and hosts would have to be taken into account.  If you'd like this, take a
-crack at it and submit a pull request.  The bash specific code lives in
-`tt--initialize`.  To make this work generically, `tt--initialize` would have to
-dispatch to different initialization functions based on the configuration.  Here
-is an example of that function that works with tcsh instead:
+Currently tramp-term only supports bash shells on the remote host.
+This would be pretty easy to extend but could be tricky to make
+configurable since both users and hosts would have to be taken into
+account.  If you'd like this, take a crack at it and submit a pull
+request.  The bash specific code lives in `tramp-term--initialize`.
+To make this work generically, `tramp-term--initialize` would have to
+dispatch to different initialization functions based on the
+configuration.  Here is an example of that function that works with
+tcsh instead:
 
 ```elisp
-(defun tt--initialize (hostname)
+(defun tramp-term--initialize (hostname)
   "Send bash commands to set up tramp integration."
   (term-send-raw-string (format "
 alias precmd 'echo \"\\033AnSiTu\" \"$USER\"; echo \"\\033AnSiTc\" \"$PWD\"; echo \"\\033AnSiTh\" \"%s\"'
