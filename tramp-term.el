@@ -3,7 +3,7 @@
 ;; Copyright (C) 2014 Randy Morris
 
 ;; Author: Randy Morris <randy.morris@archlinux.us>
-;; Version: 0.1
+;; Version: 0.2
 ;; Keywords: tramp, ssh
 ;; URL: https://github.com/randymorris/tramp-term.el
 
