@@ -136,14 +136,14 @@ as a list of strings"
 (defun tramp-term--create-term (new-buffer-name cmd &rest switches)
   "Create an ansi-term running an arbitrary command, including
 extra parameters."
-  (let* ((new-buffer-name (format "*%s*" new-buffer-name))
-         (new-buffer-name (generate-new-buffer-name new-buffer-name))
-         (new-buffer-name (replace-regexp-in-string "\*" "" new-buffer-name))
-         (new-buffer-name (apply 'make-term new-buffer-name cmd nil switches)))
-    (set-buffer new-buffer-name)
-    (term-mode)
-    (term-char-mode)
-    (term-set-escape-char ?\C-x)
+  (let ((new-buffer-name (format "*%s*" new-buffer-name)))
+    (setq new-buffer-name (generate-new-buffer-name new-buffer-name))
+    (with-current-buffer (make-term new-buffer-name cmd nil (car switches))
+      (rename-buffer new-buffer-name)   ; Undo the extra "*"s that
+                                        ; make-term insists on adding
+      (term-mode)
+      (term-char-mode)
+      (term-set-escape-char ?\C-x))
     (switch-to-buffer new-buffer-name)))
 
 (provide 'tramp-term)
