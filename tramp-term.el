@@ -119,7 +119,7 @@ function set-eterm-dir {
     echo -e \"\\033AnSiTh\" \"%s\"
     history -a
 }
-PROMPT_COMMAND=set-eterm-dir
+PROMPT_COMMAND=\"${PROMPT_COMMAND:+$PROMPT_COMMAND ;} set-eterm-dir\"
 clear
 " hostname)))
 
