@@ -114,7 +114,7 @@ enable tramp integration in that terminal."
   "Send bash commands to set up tramp integration."
   (term-send-raw-string (format "
 function set-eterm-dir {
-    echo -e \"\\033AnSiTu\" \"ssh:$USER\"
+    echo -e \"\\033AnSiTu\" \"$USER\"
     echo -e \"\\033AnSiTc\" \"$PWD\"
     echo -e \"\\033AnSiTh\" \"%s\"
     history -a
