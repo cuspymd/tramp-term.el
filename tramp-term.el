@@ -24,7 +24,7 @@
 
 ;;; Commentary:
 
-;; This package provides a way to initiate ssh sessions within emacs
+;; This package provides a way to initiate ssh sessions within Emacs
 ;; and have directory tracking automatically set up for editing files
 ;; with TRAMP.  No configuration is required on the remote host.
 ;;
@@ -42,16 +42,16 @@
 (require 'tramp)
 
 (defvar tramp-term-after-initialized-hook nil
-  "Hook called after tramp has been initialized on the remote
-  host.  Hooks should expect a single arg which contains the
-  hostname used to connect to the remote machine.")
+  "Hook called after tramp has been initialized on the remote host.
+Hooks should expect a single arg which contains the
+hostname used to connect to the remote machine.")
 
 ;;;###autoload
 (defun tramp-term (&optional host-arg)
-  "Create an ansi-term running ssh session and automatically
-enable tramp integration in that terminal.  Optional argument
-HOST-ARG is a list or one or two elements, the last of which is
-the host name."
+  "Create an `ansi-term` running ssh session.
+And automatically enable tramp integration in that terminal.
+Optional argument HOST-ARG is a list or one or two elements,
+the last of which is the host name."
   (interactive)
   (let* ((host (or host-arg (tramp-term--select-host)))
          (hostname (car (last host)))
@@ -67,7 +67,7 @@ the host name."
 ;; I imagine TRAMP has utility functions that would replace most of
 ;; this.  Needs investigation.
 (defun tramp-term--do-ssh-login (host)
-  "Perform the ssh login dance."
+  "Perform the ssh login at HOST."
   (let* ((user "")
          (hostname (car (last host))))
     (when (= (length host) 2)
@@ -89,19 +89,23 @@ the host name."
                 (t (sleep-for 0.1))))))))
 
 (defun tramp-term--find-shell-prompt (bound)
+  "Find shell prompt with a buffer position BOUND."
   (re-search-backward tramp-shell-prompt-pattern bound t))
 
 (defun tramp-term--find-yesno-prompt (bound)
+  "Find yesno prompt with a buffer position BOUND."
   (re-search-backward tramp-yesno-prompt-regexp bound t))
 
 (defun tramp-term--find-passwd-prompt (bound)
+  "Find password prompt with a buffer position BOUND."
   (re-search-backward tramp-password-prompt-regexp bound t))
 
 (defun tramp-term--find-service-unknown (bound)
+  "Find service unknown with a buffer position BOUND."
   (re-search-backward "Name or service not known" bound t))
 
 (defun tramp-term--handle-passwd-prompt ()
-  "Reads a password from the user and sends it to the server."
+  "Read a password from the user and sends it to the server."
   (term-send-raw-string
    (concat (read-passwd "Password: ") (kbd "RET"))))
 
@@ -113,7 +117,7 @@ the host name."
     (throw 'tramp-term--abort 'tramp-term--abort)))
 
 (defun tramp-term--initialize (hostname)
-  "Send bash commands to set up tramp integration."
+  "Send bash commands to set up tramp integration for HOSTNAME."
     (term-send-raw-string (format "
 function set-eterm-dir {
     echo -e \"\\033AnSiTu\" \"%s$USER\"
@@ -131,13 +135,12 @@ clear
     (completing-read-multiple "[user@]host: " (tramp-term--parse-hosts "~/.ssh/config"))))
 
 (defun tramp-term--parse-hosts (ssh-config)
-  "Parse any host directives from SSH-CONFIG file and return them
-as a list of strings"
+  "Parse any host directives from SSH-CONFIG file and return them as a list of strings."
   (mapcar 'cadr (delete nil (tramp-parse-sconfig ssh-config))))
 
 (defun tramp-term--create-term (new-buffer-name cmd &rest switches)
-  "Create an ansi-term running an arbitrary command, including
-extra parameters."
+  "Create an `ansi-term` running an arbitrary CMD with NEW-BUFFER-NAME.
+Including extra parameters SWITCHES."
   (let ((new-buffer-name (generate-new-buffer-name (format "*%s*" new-buffer-name))))
     (with-current-buffer (make-term new-buffer-name cmd nil (car switches))
       (rename-buffer new-buffer-name)   ; Undo the extra "*"s that
