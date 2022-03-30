@@ -1,8 +1,10 @@
+[![MELPA](https://melpa.org/packages/tramp-term-badge.svg)](https://melpa.org/#/tramp-term)
 # tramp-term.el
 
 Provides a quick way to launch an ssh session in an ansi-term with directory
 tracking pre-configured.  This makes opening remote files via TRAMP directly
 from the ssh session as easy as <kbd>C-x</kbd> <kbd>C-f</kbd>.
+
 
 ## Installation
 
