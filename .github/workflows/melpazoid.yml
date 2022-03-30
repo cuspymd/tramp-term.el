@@ -24,7 +24,7 @@ jobs:
       env:
         LOCAL_REPO: ${{ github.workspace }}
         # RECIPE is your recipe as written for MELPA:
-        RECIPE: (shx :repo "cuspymd/tramp-term.el" :fetcher github)
+        RECIPE: (tramp-term :repo "cuspymd/tramp-term.el" :fetcher github)
         # set this to false (or remove it) if the package isn't on MELPA:
         EXIST_OK: true
       run: echo $GITHUB_REF && make -C ~/melpazoid
