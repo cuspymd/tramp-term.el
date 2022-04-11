@@ -131,8 +131,30 @@ clear
 
 (defun tramp-term--select-host ()
   "Return a host from a list of hosts."
-  (let ((crm-separator "@"))
-    (completing-read-multiple "[user@]host: " (tramp-term--parse-hosts "~/.ssh/config"))))
+  (let* ((crm-separator "@")
+         (default-host (tramp-term-default-host)))
+    (completing-read-multiple
+     (tramp-term-prompt default-host)
+     (tramp-term--parse-hosts "~/.ssh/config")
+     nil
+     nil
+     nil
+     nil
+     default-host
+     )))
+
+(defun tramp-term-prompt (default-host)
+  "Make prompt string with DEFAULT-HOST."
+  (let ((default-string (when default-host
+                         (format " (default %s)" default-host))))
+    (concat "[user@]host" default-string ": ")))
+
+(defun tramp-term-default-host ()
+  "Return default host based on `default-directory` which is a tramp file."
+  (when (tramp-tramp-file-p default-directory)
+    (let* ((user (file-remote-p default-directory 'user))
+           (host (file-remote-p default-directory 'host)))
+      (if user (format "%s@%s" user host) host))))
 
 (defun tramp-term--parse-hosts (ssh-config)
   "Parse any host directives from SSH-CONFIG file and return them as a list of strings."
