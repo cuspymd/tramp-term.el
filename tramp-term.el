@@ -48,7 +48,7 @@ hostname used to connect to the remote machine.")
 
 ;;;###autoload
 (defun tramp-term (&optional host-arg)
-  "Create an `ansi-term` running ssh session.
+  "Create an `ansi-term' running ssh session.
 And automatically enable tramp integration in that terminal.
 Optional argument HOST-ARG is a list or one or two elements,
 the last of which is the host name."
@@ -150,7 +150,7 @@ clear
     (concat "[user@]host" default-string ": ")))
 
 (defun tramp-term-default-host ()
-  "Return default host based on `default-directory` which is a tramp file."
+  "Return default host based on `default-directory' which is a tramp file."
   (when (tramp-tramp-file-p default-directory)
     (let* ((user (file-remote-p default-directory 'user))
            (host (file-remote-p default-directory 'host)))
@@ -161,7 +161,7 @@ clear
   (mapcar 'cadr (delete nil (tramp-parse-sconfig ssh-config))))
 
 (defun tramp-term--create-term (new-buffer-name cmd &rest switches)
-  "Create an `ansi-term` running an arbitrary CMD with NEW-BUFFER-NAME.
+  "Create an `ansi-term' running an arbitrary CMD with NEW-BUFFER-NAME.
 Including extra parameters SWITCHES."
   (let ((new-buffer-name (generate-new-buffer-name (format "*%s*" new-buffer-name))))
     (with-current-buffer (make-term new-buffer-name cmd nil (car switches))
