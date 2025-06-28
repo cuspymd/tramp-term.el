@@ -12,44 +12,70 @@ tramp-term.el is an Emacs Lisp package that provides automatic setup of director
 - `tramp-term.el` - Single-file package containing all functionality
 - Main entry point: `tramp-term` interactive function
 - SSH connection handling with automatic prompt detection and response
-- TRAMP integration via bash shell configuration on remote hosts
+- Multi-shell support with auto-detection and per-host configuration
 
 **Key Functions:**
 - `tramp-term`: Main interactive command to establish SSH connection
 - `tramp-term--do-ssh-login`: Handles SSH authentication flow
-- `tramp-term--initialize`: Configures bash shell for directory tracking
+- `tramp-term--initialize`: Dispatches to shell-specific initialization functions
+- `tramp-term--detect-shell`: Auto-detects remote shell using `$0` variable
 - `tramp-term--select-host`: Provides host completion from ~/.ssh/config
+
+**Shell Architecture:**
+- Shell-specific initialization functions: `tramp-term--initialize-bash`, `tramp-term--initialize-zsh`, `tramp-term--initialize-tcsh`
+- Per-shell AnSiT escape sequence injection for directory tracking
+- Host-specific shell caching via `tramp-term-host-shells` customization variable
 
 **Dependencies:**
 - Built-in Emacs packages: `term` and `tramp`
-- Requires bash shell on remote hosts
+- Supports bash, zsh, and tcsh shells on remote hosts
 - Uses ~/.ssh/config for host completion
 
-## Development Workflow
+## Development Commands
 
-**Package Structure:**
-- Single .el file with proper Emacs Lisp package headers
-- Available on MELPA package repository
-- Uses `;;;###autoload` for main entry point
+**Testing:**
+```bash
+# Start test containers with different shells
+docker compose up -d
 
-**Key Design Patterns:**
-- Interactive prompts with host completion
-- Async SSH connection handling with regex-based prompt detection
-- Shell command injection for TRAMP setup via `term-send-raw-string`
-- Hook system via `tramp-term-after-initialized-hook`
+# Run shell compatibility tests
+./scripts/test-runner.sh
 
-**Testing and Validation:**
-- Manual testing with various SSH configurations
-- Test with different remote hosts and authentication methods
-- Verify directory tracking works with TRAMP file operations
+# Manual testing in Emacs
+M-x tramp-term RET tramp-zsh RET
+```
+
+**Package Distribution:**
+- Only `tramp-term.el` is distributed via MELPA/ELPA
+- Test infrastructure and documentation remain in repository only
 
 ## Shell Compatibility
 
-**Current Support:**
-- Bash shells only on remote hosts
-- Directory tracking via PROMPT_COMMAND and AnSiT escape sequences
+**Supported Shells:**
+- **Bash**: Uses PROMPT_COMMAND for directory tracking
+- **Zsh**: Uses precmd_functions array
+- **Tcsh**: Uses aliases for cd/pushd/popd with `/bin/echo -e` for escape sequences
 
-**Extension Points:**
-- `tramp-term--initialize` function can be modified for other shells
-- Example tcsh implementation provided in README.md
-- Would require per-host shell configuration for full generalization
+**Auto-Detection Logic:**
+- `tramp-term--detect-shell` uses `echo "$MARKER$0"` to identify shell
+- Results cached in `tramp-term-host-shells` per hostname
+- Falls back to user prompt if detection fails
+
+**Configuration System:**
+- `tramp-term-default-shell`: Global default ('bash, 'zsh, 'tcsh, or 'auto)
+- `tramp-term-host-shells`: Alist of (hostname . shell-type) pairs
+- Automatic persistence via `customize-save-variable`
+
+## Testing Architecture
+
+**Docker Test Environment:**
+- Separate containers for bash, zsh, tcsh shells
+- SSH key-based authentication via generated test keys
+- Clean shell environments for testing auto-detection
+- Port mapping: zsh(2222), tcsh(2223), bash(2225)
+
+**Test Verification Points:**
+- Shell auto-detection accuracy
+- AnSiT escape sequence injection
+- Directory tracking functionality
+- TRAMP integration with `default-directory` updates
