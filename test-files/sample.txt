@@ -1,0 +1,15 @@
+This is a test file for tramp-term shell testing.
+
+You can edit this file to verify TRAMP integration works correctly.
+
+Test operations:
+- Open this file: C-x C-f sample.txt
+- Edit and save
+- Create new files
+- Navigate directories
+
+Shell testing checklist:
+- [ ] Directory tracking works
+- [ ] File editing via TRAMP works  
+- [ ] No shell conflicts
+- [ ] Prompt functions correctly

@@ -35,30 +35,50 @@ normal ansi-term or shell buffer with `find-file`:
 As you change directories, emacs' `default-directory` will be kept in sync,
 including the TRAMP syntax to open the remote files.
 
+### Shell Support
+
+tramp-term supports the following shells on remote hosts:
+
+* **Bash** (default)
+* **Zsh** 
+* **Tcsh** (including csh)
+
+The shell type can be configured in several ways:
+
+1. **Auto-detection** (recommended): Set `tramp-term-default-shell` to `'auto` to automatically detect the remote shell
+2. **Manual configuration**: Set a default shell type or configure per-host shells
+3. **Interactive selection**: If auto-detection fails, you'll be prompted to select the shell type
+
 ### Configuration
+
+* `tramp-term-default-shell` - Default shell to use for connections. Options:
+  - `'bash` (default)
+  - `'auto` (auto-detect remote shell)
+  - `'zsh`
+  - `'tcsh`
+
+* `tramp-term-host-shells` - Alist of (hostname . shell-type) pairs for remembered shell types. This is automatically populated when shells are detected or manually set.
 
 * `tramp-term-after-initialized-hook` - Hook called after tramp-term has been
   initialized on the remote host.  Hooks should expect a single
   argument which contains the hostname used to connect to the remote
   machine.
 
-### Limitations
+#### Auto-Detection
 
-Currently tramp-term only supports bash shells on the remote host.
-This would be pretty easy to extend but could be tricky to make
-configurable since both users and hosts would have to be taken into
-account.  If you'd like this, take a crack at it and submit a pull
-request.  The bash specific code lives in `tramp-term--initialize`.
-To make this work generically, `tramp-term--initialize` would have to
-dispatch to different initialization functions based on the
-configuration.  Here is an example of that function that works with
-tcsh instead:
+When `tramp-term-default-shell` is set to `'auto`, tramp-term will:
+
+1. Attempt to detect the remote shell using `$0` variable
+2. Cache the detected shell type for future connections to the same host
+3. Fall back to user selection if detection fails
+
+### Example Configuration
 
 ```elisp
-(defun tramp-term--initialize (hostname)
-  "Send bash commands to set up tramp integration."
-  (term-send-raw-string (format "
-alias precmd 'echo \"\\033AnSiTu\" \"$USER\"; echo \"\\033AnSiTc\" \"$PWD\"; echo \"\\033AnSiTh\" \"%s\"'
-clear
-" hostname)))
+;; Enable auto-detection for all hosts
+(setq tramp-term-default-shell 'auto)
+
+;; Or set specific shells for specific hosts
+(setq tramp-term-host-shells '(("server1.example.com" . zsh)
+                               ("server2.example.com" . tcsh)))
 ```

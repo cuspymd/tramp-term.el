@@ -41,6 +41,26 @@
 (require 'term)
 (require 'tramp)
 
+(defgroup tramp-term nil
+  "Automatic setup of directory tracking in ssh sessions."
+  :group 'comm)
+
+(defcustom tramp-term-default-shell 'bash
+  "Default shell to use for tramp-term connections.
+When set to 'auto, will attempt to auto-detect the remote shell.
+Supported shells: bash, zsh, tcsh."
+  :type '(choice (const :tag "Bash (default)" bash)
+                 (const :tag "Auto-detect" auto)
+                 (const :tag "Zsh" zsh)
+                 (const :tag "Tcsh" tcsh))
+  :group 'tramp-term)
+
+(defcustom tramp-term-host-shells '()
+  "Alist of (hostname . shell-type) pairs for remembered shell types.
+This is automatically populated when shells are detected or manually set."
+  :type '(alist :key-type string :value-type symbol)
+  :group 'tramp-term)
+
 (defvar tramp-term-after-initialized-hook nil
   "Hook called after tramp has been initialized on the remote host.
 Hooks should expect a single arg which contains the
@@ -117,8 +137,82 @@ the last of which is the host name."
     (throw 'tramp-term--abort 'tramp-term--abort)))
 
 (defun tramp-term--initialize (hostname)
+  "Set up tramp integration for HOSTNAME using appropriate shell."
+  (let* ((cached-shell (cdr (assoc hostname tramp-term-host-shells)))
+         (shell-type (or cached-shell 
+                        (if (eq tramp-term-default-shell 'auto)
+                            (tramp-term--detect-shell hostname)
+                          tramp-term-default-shell))))
+    (when (and (not cached-shell) shell-type)
+      (add-to-list 'tramp-term-host-shells (cons hostname shell-type))
+      (customize-save-variable 'tramp-term-host-shells tramp-term-host-shells))
+    (cond
+     ((eq shell-type 'bash) (tramp-term--initialize-bash hostname))
+     ((eq shell-type 'zsh) (tramp-term--initialize-zsh hostname))
+     ((eq shell-type 'tcsh) (tramp-term--initialize-tcsh hostname))
+     (t (tramp-term--initialize-bash hostname)))))
+
+(defun tramp-term--detect-shell (hostname)
+  "Attempt to detect the shell type for HOSTNAME."
+  (message "Auto-detecting shell for %s..." hostname)
+  (let ((detection-marker (format "TRAMP_SHELL_DETECT_%d:" (random 10000)))
+        (shell-type nil))
+    ;; Send detection command with unique marker
+    (term-send-raw-string (format "echo \"%s$0\"\n" detection-marker))
+    (sleep-for 1.0)  ; Wait for response
+    
+    ;; Try to parse the output
+    (setq shell-type (tramp-term--parse-shell-output detection-marker))
+    
+    (if shell-type
+        (progn
+          (message "Detected %s shell for %s" shell-type hostname)
+          shell-type)
+      (progn
+        (message "Auto-detection failed for %s, asking user..." hostname)
+        (tramp-term--prompt-for-shell hostname)))))
+
+(defun tramp-term--parse-shell-output (detection-marker)
+  "Parse terminal buffer to find shell type using DETECTION-MARKER."
+  (save-excursion
+    (goto-char (point-max))
+    (when (re-search-backward (regexp-quote detection-marker) nil t)
+      (let ((line-start (line-beginning-position))
+            (line-end (line-end-position)))
+        (goto-char line-start)
+        (when (re-search-forward (concat (regexp-quote detection-marker) "\\(.+\\)") line-end t)
+          (let ((shell-path (match-string 1)))
+            (tramp-term--classify-shell shell-path)))))))
+
+(defun tramp-term--classify-shell (shell-path)
+  "Classify shell type from SHELL-PATH string."
+  (when (stringp shell-path)
+    (let ((shell-path (string-trim shell-path)))
+      (cond
+       ;; Login shells with dash prefix
+       ((string-match-p "^-?bash$\\|/bash$" shell-path) 'bash)
+       ((string-match-p "^-?zsh$\\|/zsh$" shell-path) 'zsh)
+       ((string-match-p "^-?tcsh$\\|/tcsh$\\|^-?csh$\\|/csh$" shell-path) 'tcsh)
+       ;; Full paths
+       ((string-match-p "/bin/bash\\|/usr/bin/bash\\|/usr/local/bin/bash" shell-path) 'bash)
+       ((string-match-p "/bin/zsh\\|/usr/bin/zsh\\|/usr/local/bin/zsh" shell-path) 'zsh)
+       ((string-match-p "/bin/tcsh\\|/usr/bin/tcsh\\|/usr/local/bin/tcsh" shell-path) 'tcsh)
+       ((string-match-p "/bin/csh\\|/usr/bin/csh\\|/usr/local/bin/csh" shell-path) 'tcsh)
+       ;; Default fallback
+       (t nil)))))
+
+(defun tramp-term--prompt-for-shell (hostname)
+  "Prompt user to select shell type for HOSTNAME."
+  (let ((shell-choice 
+         (completing-read 
+          (format "Select shell for %s: " hostname)
+          '("bash" "zsh" "tcsh")
+          nil t nil nil "bash")))
+    (intern shell-choice)))
+
+(defun tramp-term--initialize-bash (hostname)
   "Send bash commands to set up tramp integration for HOSTNAME."
-    (term-send-raw-string (format "
+  (term-send-raw-string (format "
 function set-eterm-dir {
     echo -e \"\\033AnSiTu\" \"%s$USER\"
     echo -e \"\\033AnSiTc\" \"$PWD\"
@@ -126,6 +220,29 @@ function set-eterm-dir {
     history -a
 }
 PROMPT_COMMAND=\"${PROMPT_COMMAND:+$PROMPT_COMMAND ;} set-eterm-dir\"
+clear
+" (if (version= emacs-version "26.1") "ssh:" "") hostname)))
+
+(defun tramp-term--initialize-zsh (hostname)
+  "Send zsh commands to set up tramp integration for HOSTNAME."
+  (term-send-raw-string (format "
+set-eterm-dir() {
+    echo -e \"\\033AnSiTu\" \"%s$USER\"
+    echo -e \"\\033AnSiTc\" \"$PWD\"
+    echo -e \"\\033AnSiTh\" \"%s\"
+}
+precmd_functions+=(set-eterm-dir)
+clear
+" (if (version= emacs-version "26.1") "ssh:" "") hostname)))
+
+(defun tramp-term--initialize-tcsh (hostname)
+  "Send tcsh commands to set up tramp integration for HOSTNAME."
+  (term-send-raw-string (format "
+alias set-eterm-dir '/bin/echo -e \"\\033AnSiTu\" \"%s$USER\"; /bin/echo -e \"\\033AnSiTc\" \"$PWD\"; /bin/echo -e \"\\033AnSiTh\" \"%s\"'
+alias cd 'chdir \\!*; set-eterm-dir'
+alias pushd 'pushd \\!*; set-eterm-dir'
+alias popd 'popd \\!*; set-eterm-dir'
+set-eterm-dir
 clear
 " (if (version= emacs-version "26.1") "ssh:" "") hostname)))
 

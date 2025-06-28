@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  zsh-test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.zsh
+    container_name: tramp-term-zsh
+    ports:
+      - "2222:22"
+    volumes:
+      - ./test-files:/home/testuser/test-files
+    environment:
+      - SHELL=/usr/bin/zsh
+
+  tcsh-test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.tcsh
+    container_name: tramp-term-tcsh
+    ports:
+      - "2223:22"
+    volumes:
+      - ./test-files:/home/testuser/test-files
+    environment:
+      - SHELL=/bin/tcsh
+
+  fish-test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.fish
+    container_name: tramp-term-fish
+    ports:
+      - "2224:22"
+    volumes:
+      - ./test-files:/home/testuser/test-files
+    environment:
+      - SHELL=/usr/bin/fish
+
+  bash-test:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bash
+    container_name: tramp-term-bash
+    ports:
+      - "2225:22"
+    volumes:
+      - ./test-files:/home/testuser/test-files
+    environment:
+      - SHELL=/bin/bash
